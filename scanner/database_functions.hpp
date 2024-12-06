@@ -1,11 +1,11 @@
-#include <string>
-#include <vector>
 #include <sqlite3.h>
+
 #include <list>
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "tag_functions.hpp"
-#include "trie.hpp"
 
 #define CREATE_ALBUMS "CREATE TABLE Albums ( id INTEGER PRIMARY KEY, title VARCHAR(512), release_year INT );"
 #define CREATE_SONGS "CREATE TABLE Songs ( id INTEGER PRIMARY KEY, title VARCHAR(512), track_number INT, disc_number INT, album_id INT, rating SMALLINT DEFAULT -1, location VARCHAR(1024), FOREIGN KEY (album_id) REFERENCES Albums(id) );"
@@ -19,8 +19,7 @@ enum EntityType {
     Genre
 };
 
-extern "C" __attribute__((visibility("default"))) __attribute__((used))
-int createDatabase(const char *db_path);
+extern "C" __attribute__((visibility("default"))) __attribute__((used)) int createDatabase(const char *db_path);
 
 int createTables(sqlite3 *db);
 int getEntityId(sqlite3 *db, EntityType entity_type, const std::string &artist_name);
