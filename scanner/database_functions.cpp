@@ -1,9 +1,10 @@
-#include <unordered_set>
-#include <filesystem>
-
 #include "database_functions.hpp"
-#include "tag_functions.hpp"
+
+#include <filesystem>
+#include <unordered_set>
+
 #include "misc.hpp"
+#include "tag_functions.hpp"
 
 /**
  * @brief Creates a new SQLite database file at the given path, and creates
@@ -16,14 +17,12 @@
  *
  * @return 0 on success, -1 on failure.
  */
-int createDatabase(const char *db_path)
-{
+int createDatabase(const char *db_path) {
     sqlite3 *db;
     int rc;
 
     rc = sqlite3_open(db_path, &db);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Can't open database %s: %s\n", db_path, sqlite3_errmsg(db));
         sqlite3_close(db);
         return -1;
@@ -35,8 +34,7 @@ int createDatabase(const char *db_path)
     sqlite3_db_config(db, SQLITE_DBCONFIG_RESET_DATABASE, 0, 0);
 
     // Creating tables
-    if (createTables(db) != 0)
-    {
+    if (createTables(db) != 0) {
         log("Unable to create tables for new database @ %s\n", db_path);
         sqlite3_close(db);
         return -1;
@@ -57,8 +55,7 @@ int createDatabase(const char *db_path)
  *
  * @return 0 on success, -1 on failure.
  */
-int createTables(sqlite3 *db)
-{
+int createTables(sqlite3 *db) {
     int rc, i;
     char *error_message;
     const char *k_create[] = {
@@ -72,11 +69,9 @@ int createTables(sqlite3 *db)
         "CREATE TABLE Playlists ( 	id INTEGER PRIMARY KEY AUTOINCREMENT, 	title VARCHAR(512) );",
         "CREATE TABLE PlaylistSongs ( 	id INTEGER PRIMARY KEY AUTOINCREMENT, 	playlist_id INTEGER, 	song_id INTEGER, 	FOREIGN KEY (playlist_id) REFERENCES Playlists(id) ON DELETE CASCADE, 	FOREIGN KEY (song_id) REFERENCES Songs(id) ON DELETE CASCADE );"};
 
-    for (i = 0; i < 9; i++)
-    {
+    for (i = 0; i < 9; i++) {
         rc = sqlite3_exec(db, k_create[i], NULL, NULL, &error_message);
-        if (rc != SQLITE_OK)
-        {
+        if (rc != SQLITE_OK) {
             log("Error while creating table %d: %s\n", i, error_message);
             sqlite3_free(error_message);
         }
@@ -96,35 +91,32 @@ int createTables(sqlite3 *db)
  *
  * @return The id of the entity. If the entity does not exist and cannot be created, -1 is returned.
  */
-int getEntityId(sqlite3 *db, EntityType entity_type, const std::string &entity_name)
-{
+int getEntityId(sqlite3 *db, EntityType entity_type, const std::string &entity_name) {
     int entity_id = 0, rc;
     char *sql_stmt, *error_message;
     const char *table_name, *column_name;
 
-    switch (entity_type)
-    {
-    case EntityType::Album:
-        table_name = "Albums";
-        column_name = "title";
-        break;
-    case EntityType::Artist:
-        table_name = "Artists";
-        column_name = "name";
-        break;
-    case EntityType::Genre:
-        table_name = "Genres";
-        column_name = "name";
-        break;
-    default:
-        return -1;
+    switch (entity_type) {
+        case EntityType::Album:
+            table_name = "Albums";
+            column_name = "title";
+            break;
+        case EntityType::Artist:
+            table_name = "Artists";
+            column_name = "name";
+            break;
+        case EntityType::Genre:
+            table_name = "Genres";
+            column_name = "name";
+            break;
+        default:
+            return -1;
     }
 
     // Try to find entity id
     sql_stmt = sqlite3_mprintf("SELECT id FROM %s WHERE %s = \"%s\";", table_name, column_name, escapeDQ(entity_name).c_str());
     rc = sqlite3_exec(db, sql_stmt, &__getEntityIdInternalCallback, &entity_id, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Error while executing query to get %s id of %s: %s\n", table_name, entity_name.c_str(), error_message);
         sqlite3_free(sql_stmt);
         sqlite3_free(error_message);
@@ -133,13 +125,11 @@ int getEntityId(sqlite3 *db, EntityType entity_type, const std::string &entity_n
     sqlite3_free(sql_stmt);
 
     // If entity does not exist, create it
-    if (entity_id == 0)
-    {
+    if (entity_id == 0) {
         // Creating the entity
         sql_stmt = sqlite3_mprintf("INSERT INTO %s (id, %s) VALUES (NULL, \"%s\");", table_name, column_name, escapeDQ(entity_name).c_str());
         rc = sqlite3_exec(db, sql_stmt, NULL, NULL, &error_message);
-        if (rc != SQLITE_OK)
-        {
+        if (rc != SQLITE_OK) {
             log("Error while executing query to create %s %s: %s\n", table_name, entity_name.c_str(), error_message);
             sqlite3_free(sql_stmt);
             sqlite3_free(error_message);
@@ -149,8 +139,7 @@ int getEntityId(sqlite3 *db, EntityType entity_type, const std::string &entity_n
         // Getting the entity id, after it has been created
         sql_stmt = sqlite3_mprintf("SELECT id FROM %s WHERE %s = \"%s\";", table_name, column_name, escapeDQ(entity_name).c_str());
         rc = sqlite3_exec(db, sql_stmt, &__getEntityIdInternalCallback, &entity_id, &error_message);
-        if (rc != SQLITE_OK)
-        {
+        if (rc != SQLITE_OK) {
             log("Error while executing query to get %s id (after creating) of %s: %s\n", table_name, entity_name.c_str(), error_message);
             sqlite3_free(sql_stmt);
             sqlite3_free(error_message);
@@ -175,8 +164,7 @@ int getEntityId(sqlite3 *db, EntityType entity_type, const std::string &entity_n
  *
  * \return 0
  */
-int __getEntityIdInternalCallback(void *id, int argc, char **argv, char **column_names)
-{
+int __getEntityIdInternalCallback(void *id, int argc, char **argv, char **column_names) {
     if (argc > 0)
         *(int *)id = atoi(argv[0]);
     return 0;
@@ -195,8 +183,7 @@ int __getEntityIdInternalCallback(void *id, int argc, char **argv, char **column
  *
  * @return The id of the album if found, -1 if an error occurred.
  */
-int getAlbumId(sqlite3 *db, const std::string &album_name, std::vector<int> &artist_ids)
-{
+int getAlbumId(sqlite3 *db, const std::string &album_name, std::vector<int> &artist_ids) {
     int rc, album_id = 0;
     char *sql_stmt, *error_message;
 
@@ -204,8 +191,7 @@ int getAlbumId(sqlite3 *db, const std::string &album_name, std::vector<int> &art
 
     sql_stmt = sqlite3_mprintf("SELECT A.id FROM Albums A, AlbumArtists B, Artists C WHERE A.title = \"%s\" AND A.id = B.album_id AND B.artist_id = C.id AND C.id IN %s GROUP BY A.id HAVING COUNT(DISTINCT C.id) = ( SELECT COUNT(DISTINCT D.id) FROM Artists D WHERE D.id IN %s );", escapeDQ(album_name).c_str(), artist_ids_string.c_str(), artist_ids_string.c_str());
     rc = sqlite3_exec(db, sql_stmt, &__getEntityIdInternalCallback, &album_id, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Error while executing query to get album id of %s: %s (Query was %s)\n", album_name.c_str(), error_message, sql_stmt);
         sqlite3_free(sql_stmt);
         sqlite3_free(error_message);
@@ -213,12 +199,10 @@ int getAlbumId(sqlite3 *db, const std::string &album_name, std::vector<int> &art
     }
     sqlite3_free(sql_stmt);
 
-    if (album_id == 0)
-    {
+    if (album_id == 0) {
         sql_stmt = sqlite3_mprintf("INSERT INTO Albums (id, title) VALUES (NULL, \"%s\");", escapeDQ(album_name).c_str());
         rc = sqlite3_exec(db, sql_stmt, NULL, NULL, &error_message);
-        if (rc != SQLITE_OK)
-        {
+        if (rc != SQLITE_OK) {
             log("Error while executing query to create album %s: %s\n", album_name.c_str(), error_message);
             sqlite3_free(sql_stmt);
             sqlite3_free(error_message);
@@ -228,8 +212,7 @@ int getAlbumId(sqlite3 *db, const std::string &album_name, std::vector<int> &art
 
         sql_stmt = sqlite3_mprintf("SELECT id FROM Albums WHERE ROWID = %d;", sqlite3_last_insert_rowid(db));
         rc = sqlite3_exec(db, sql_stmt, &__getEntityIdInternalCallback, &album_id, &error_message);
-        if (rc != SQLITE_OK)
-        {
+        if (rc != SQLITE_OK) {
             log("Error while executing query to get album id (after creating) of %s: %s\n", escapeDQ(album_name).c_str(), error_message);
             sqlite3_free(sql_stmt);
             sqlite3_free(error_message);
@@ -255,14 +238,11 @@ int getAlbumId(sqlite3 *db, const std::string &album_name, std::vector<int> &art
  *
  * \return A string representation of the vector.
  */
-std::string stringifyIntVector(std::vector<int> &vec)
-{
+std::string stringifyIntVector(std::vector<int> &vec) {
     std::string result = "(";
-    if (vec.size() != 0)
-    {
+    if (vec.size() != 0) {
         result += std::to_string(vec[0]);
-        for (int i = 1; i < vec.size(); i++)
-        {
+        for (int i = 1; i < vec.size(); i++) {
             result += ", ";
             result += std::to_string(vec[i]);
         }
@@ -285,13 +265,11 @@ std::string stringifyIntVector(std::vector<int> &vec)
  *
  * @return 0 on success, -1 on failure.
  */
-int addAlbumArtistRelationship(sqlite3 *db, int album_id, int artist_id)
-{
+int addAlbumArtistRelationship(sqlite3 *db, int album_id, int artist_id) {
     char *sql_stmt, *error_message;
     sql_stmt = sqlite3_mprintf("INSERT INTO AlbumArtists (album_id, artist_id) VALUES (%d, %d);", album_id, artist_id);
     int rc = sqlite3_exec(db, sql_stmt, NULL, NULL, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Error while executing query to add album artist relationship: %s\n", error_message);
         sqlite3_free(sql_stmt);
         sqlite3_free(error_message);
@@ -313,29 +291,25 @@ int addAlbumArtistRelationship(sqlite3 *db, int album_id, int artist_id)
  *
  * @return 0 on success, -1 on failure.
  */
-int addSong(sqlite3 *db, Metadata &metadata, std::string &album_art_directory)
-{
+int addSong(sqlite3 *db, Metadata &metadata, std::string &album_art_directory) {
     std::vector<int> album_artist_ids, contrib_artist_ids, genre_ids;
     bool error = false;
 
-    for (int i = 0; i < metadata.album_artists.size(); i++)
-    {
+    for (int i = 0; i < metadata.album_artists.size(); i++) {
         int id = getEntityId(db, EntityType::Artist, metadata.album_artists[i]);
         if (id != -1)
             album_artist_ids.push_back(id);
         else
             error = true;
     }
-    for (int i = 0; i < metadata.contributing_artists.size(); i++)
-    {
+    for (int i = 0; i < metadata.contributing_artists.size(); i++) {
         int id = getEntityId(db, EntityType::Artist, metadata.contributing_artists[i]);
         if (id != -1)
             contrib_artist_ids.push_back(id);
         else
             error = true;
     }
-    for (int i = 0; i < metadata.genres.size(); i++)
-    {
+    for (int i = 0; i < metadata.genres.size(); i++) {
         int id = getEntityId(db, EntityType::Genre, metadata.genres[i]);
         if (id != -1)
             genre_ids.push_back(id);
@@ -344,13 +318,11 @@ int addSong(sqlite3 *db, Metadata &metadata, std::string &album_art_directory)
     }
 
     int album_id = getAlbumId(db, metadata.album, album_artist_ids);
-    if (album_id == -1)
-    {
+    if (album_id == -1) {
         log("Unable to add album %s\n", metadata.album.c_str());
         return -1;
     }
-    if (!hasAlbumArt(db, album_id))
-    {
+    if (!hasAlbumArt(db, album_id)) {
         std::string image_location = getImage(metadata.file_location, album_art_directory);
         if (image_location != "")
             addAlbumArt(db, album_id, image_location);
@@ -362,8 +334,7 @@ int addSong(sqlite3 *db, Metadata &metadata, std::string &album_art_directory)
         metadata.disc_number,
         album_id,
         metadata.file_location);
-    if (song_id == -1)
-    {
+    if (song_id == -1) {
         log("Unable to add song %s\n", metadata.file_location.c_str());
         return -1;
     }
@@ -399,15 +370,13 @@ int addSongEntryToTable(
     int track_number,
     int disc_number,
     int album_id,
-    std::string location)
-{
+    std::string location) {
     char *sql_stmt, *error_message;
     int song_id;
 
     sql_stmt = sqlite3_mprintf("INSERT INTO Songs (title, track_number, disc_number, album_id, location) VALUES (\"%s\", %d, %d, %d, \"%s\");", escapeDQ(title).c_str(), track_number, disc_number, album_id, escapeDQ(location).c_str());
     int rc = sqlite3_exec(db, sql_stmt, NULL, NULL, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Unable to insert song entry of %s : %s | query was %s\n", location.c_str(), error_message, sql_stmt);
         sqlite3_free(error_message);
         sqlite3_free(sql_stmt);
@@ -417,8 +386,7 @@ int addSongEntryToTable(
 
     sql_stmt = sqlite3_mprintf("SELECT id FROM Songs WHERE ROWID = %d;", sqlite3_last_insert_rowid(db));
     rc = sqlite3_exec(db, sql_stmt, __getEntityIdInternalCallback, &song_id, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Unable to find song id after insertion of %s : %s\n", location.c_str(), error_message);
         sqlite3_free(error_message);
         sqlite3_free(sql_stmt);
@@ -441,14 +409,12 @@ int addSongEntryToTable(
  *
  * @return 0 on success, -1 on failure.
  */
-int addContribArtistRelationship(sqlite3 *db, int song_id, int artist_id)
-{
+int addContribArtistRelationship(sqlite3 *db, int song_id, int artist_id) {
     char *sql_stmt, *error_message;
 
     sql_stmt = sqlite3_mprintf("INSERT INTO ContributingArtists(song_id, artist_id) VALUES (%d, %d);", song_id, artist_id);
     int rc = sqlite3_exec(db, sql_stmt, NULL, NULL, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Error while executing query to add contrib artist relationship: %s\n", error_message);
         sqlite3_free(sql_stmt);
         sqlite3_free(error_message);
@@ -472,14 +438,12 @@ int addContribArtistRelationship(sqlite3 *db, int song_id, int artist_id)
  *
  * @return 0 on success, -1 on failure.
  */
-int addSongGenreRelationship(sqlite3 *db, int song_id, int genre_id)
-{
+int addSongGenreRelationship(sqlite3 *db, int song_id, int genre_id) {
     char *sql_stmt, *error_message;
 
     sql_stmt = sqlite3_mprintf("INSERT INTO SongGenreMap(song_id, genre_id) VALUES (%d, %d);", song_id, genre_id);
     int rc = sqlite3_exec(db, sql_stmt, NULL, NULL, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Error while executing query to add song genre relationship: %s\n", error_message);
         sqlite3_free(sql_stmt);
         sqlite3_free(error_message);
@@ -501,14 +465,12 @@ int addSongGenreRelationship(sqlite3 *db, int song_id, int genre_id)
  *
  * @return True if the album has an album art, false otherwise. Also true in case of error.
  */
-bool hasAlbumArt(sqlite3 *db, int album_id)
-{
+bool hasAlbumArt(sqlite3 *db, int album_id) {
     char *sql_stmt, *error_message;
     int answer = 0;
     sql_stmt = sqlite3_mprintf("SELECT 1 FROM Albums WHERE album_art_location IS NOT NULL AND id = %d;", album_id);
     int rc = sqlite3_exec(db, sql_stmt, &__getEntityIdInternalCallback, &answer, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Error while executing query to check if album has art: %s\n", error_message);
         sqlite3_free(sql_stmt);
         sqlite3_free(error_message);
@@ -530,13 +492,11 @@ bool hasAlbumArt(sqlite3 *db, int album_id)
  *
  * @return 0 on success, -1 on failure.
  */
-int addAlbumArt(sqlite3 *db, int album_id, std::string album_art_location)
-{
+int addAlbumArt(sqlite3 *db, int album_id, std::string album_art_location) {
     char *sql_stmt, *error_message;
     sql_stmt = sqlite3_mprintf("UPDATE Albums SET album_art_location = \"%s\" WHERE id = %d;", album_art_location.c_str(), album_id);
     int rc = sqlite3_exec(db, sql_stmt, NULL, NULL, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Error while executing query to add album art: %s\n", error_message);
         sqlite3_free(sql_stmt);
         sqlite3_free(error_message);
@@ -546,14 +506,12 @@ int addAlbumArt(sqlite3 *db, int album_id, std::string album_art_location)
     return 0;
 }
 
-std::unordered_set<std::filesystem::path> getFileLocations(sqlite3 *db)
-{
+std::unordered_set<std::filesystem::path> getFileLocations(sqlite3 *db) {
     std::unordered_set<std::filesystem::path> result;
     char *sql_stmt, *error_message;
     sql_stmt = sqlite3_mprintf("SELECT location FROM Songs;");
     int rc = sqlite3_exec(db, sql_stmt, &__getFilesCallback, &result, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Error while executing query to get files: %s\n", error_message);
         sqlite3_free(sql_stmt);
         sqlite3_free(error_message);
@@ -563,21 +521,18 @@ std::unordered_set<std::filesystem::path> getFileLocations(sqlite3 *db)
     return result;
 }
 
-int __getFilesCallback(void *data, int argc, char **argv, char **colnames)
-{
+int __getFilesCallback(void *data, int argc, char **argv, char **colnames) {
     std::unordered_set<std::filesystem::path> *ptr = (std::unordered_set<std::filesystem::path> *)data;
     if (argc > 0)
         ptr->insert(std::filesystem::path(std::string(argv[0])));
     return 0;
 }
 
-int deleteSongByLocation(sqlite3 *db, const std::string &location)
-{
+int deleteSongByLocation(sqlite3 *db, const std::string &location) {
     char *sql_stmt, *error_message;
     sql_stmt = sqlite3_mprintf("DELETE FROM Songs WHERE location = \"%s\";", escapeDQ(location).c_str());
     int rc = sqlite3_exec(db, sql_stmt, NULL, NULL, &error_message);
-    if (rc != SQLITE_OK)
-    {
+    if (rc != SQLITE_OK) {
         log("Error while executing query to delete song: %s\n", error_message);
         sqlite3_free(sql_stmt);
         sqlite3_free(error_message);
@@ -587,8 +542,7 @@ int deleteSongByLocation(sqlite3 *db, const std::string &location)
     return 0;
 }
 
-int deleteUselessAlbums(sqlite3 *db)
-{
+int deleteUselessAlbums(sqlite3 *db) {
     char *error_message;
 
     if (sqlite3_exec(
@@ -596,8 +550,7 @@ int deleteUselessAlbums(sqlite3 *db)
             "DELETE FROM Albums WHERE id NOT IN (SELECT album_id FROM Songs);",
             NULL,
             NULL,
-            &error_message) != SQLITE_OK)
-    {
+            &error_message) != SQLITE_OK) {
         log("Error while executing query to delete useless albums: %s\n", error_message);
         sqlite3_free(error_message);
         return -1;
@@ -606,8 +559,7 @@ int deleteUselessAlbums(sqlite3 *db)
     return 0;
 }
 
-int deleteUselessArtists(sqlite3 *db)
-{
+int deleteUselessArtists(sqlite3 *db) {
     char *error_message;
 
     if (sqlite3_exec(
@@ -615,8 +567,7 @@ int deleteUselessArtists(sqlite3 *db)
             "DELETE FROM Artists WHERE id NOT IN (SELECT artist_id FROM ContributingArtists UNION ALL SELECT artist_id FROM AlbumArtists);",
             NULL,
             NULL,
-            &error_message) != SQLITE_OK)
-    {
+            &error_message) != SQLITE_OK) {
         log("Error while executing query to delete useless artists: %s\n", error_message);
         sqlite3_free(error_message);
         return -1;
@@ -625,8 +576,7 @@ int deleteUselessArtists(sqlite3 *db)
     return 0;
 }
 
-int deleteUselessGenres(sqlite3 *db)
-{
+int deleteUselessGenres(sqlite3 *db) {
     char *error_message;
 
     if (sqlite3_exec(
@@ -634,8 +584,7 @@ int deleteUselessGenres(sqlite3 *db)
             "DELETE FROM Genres WHERE id NOT IN (SELECT genre_id FROM SongGenreMap);",
             NULL,
             NULL,
-            &error_message) != SQLITE_OK)
-    {
+            &error_message) != SQLITE_OK) {
         log("Error while executing query to delete useless genres: %s\n", error_message);
         sqlite3_free(error_message);
         return -1;
@@ -644,13 +593,11 @@ int deleteUselessGenres(sqlite3 *db)
     return 0;
 }
 
-int deleteUselessAlbumArt(sqlite3 *db, std::string &album_art_directory)
-{
+int deleteUselessAlbumArt(sqlite3 *db, std::string &album_art_directory) {
     std::list<std::string> album_art_locations;
     char *error_message;
 
-    if (sqlite3_exec(db, "SELECT album_art_location FROM Albums;", &__getAlbumArtLocationsCallback, &album_art_locations, &error_message) != SQLITE_OK)
-    {
+    if (sqlite3_exec(db, "SELECT album_art_location FROM Albums;", &__getAlbumArtLocationsCallback, &album_art_locations, &error_message) != SQLITE_OK) {
         log("Error while executing query to get album art locations: %s\n", error_message);
         sqlite3_free(error_message);
         return -1;
@@ -663,8 +610,7 @@ int deleteUselessAlbumArt(sqlite3 *db, std::string &album_art_directory)
 
     std::list<std::string> current_files = getFiles(album_art_directory);
 
-    for (std::list<std::string>::iterator it = current_files.begin(); it != current_files.end();)
-    {
+    for (std::list<std::string>::iterator it = current_files.begin(); it != current_files.end();) {
         std::filesystem::path current_file = std::filesystem::path(*it);
         if (required_files.find(current_file) != required_files.end())
             it = current_files.erase(it);
@@ -672,8 +618,7 @@ int deleteUselessAlbumArt(sqlite3 *db, std::string &album_art_directory)
             ++it;
     }
 
-    for (std::string location : current_files)
-    {
+    for (std::string location : current_files) {
         std::remove(
             (std::filesystem::path(album_art_directory) / std::filesystem::path(location))
                 .generic_u8string()
@@ -683,8 +628,7 @@ int deleteUselessAlbumArt(sqlite3 *db, std::string &album_art_directory)
     return 0;
 }
 
-int __getAlbumArtLocationsCallback(void *data, int argc, char **argv, char **colnames)
-{
+int __getAlbumArtLocationsCallback(void *data, int argc, char **argv, char **colnames) {
     std::list<std::string> *ptr = (std::list<std::string> *)data;
     if (argc > 0 && argv[0] != nullptr)
         ptr->push_back(std::string(argv[0]));

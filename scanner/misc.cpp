@@ -1,9 +1,11 @@
 #include "misc.hpp"
-#include <regex>
-#include <filesystem>
-#include <stack>
+
 #include <stdarg.h>
+
+#include <filesystem>
 #include <list>
+#include <regex>
+#include <stack>
 #include <string>
 
 /**
@@ -18,17 +20,15 @@
  *
  * @return A vector of strings.
  */
-std::vector<std::string> splitString(const std::string &s)
-{
+std::vector<std::string> splitString(const std::string &s) {
     std::vector<std::string> result;
     std::regex re("[&;,]");
     std::sregex_token_iterator it(s.begin(), s.end(), re, -1);
     std::sregex_token_iterator end;
-    for (; it != end; ++it)
-    {
+    for (; it != end; ++it) {
         std::string str = *it;
-        str.erase(0, str.find_first_not_of(" \t\r\n")); // remove leading whitespaces
-        str.erase(str.find_last_not_of(" \t\r\n") + 1); // remove trailing whitespaces
+        str.erase(0, str.find_first_not_of(" \t\r\n"));  // remove leading whitespaces
+        str.erase(str.find_last_not_of(" \t\r\n") + 1);  // remove trailing whitespaces
         if (str != "")
             result.push_back(str);
     }
@@ -45,25 +45,20 @@ std::vector<std::string> splitString(const std::string &s)
  *
  * @return A vector of strings containing file paths.
  */
-std::list<std::string> getFiles(std::string root)
-{
+std::list<std::string> getFiles(std::string root) {
     std::list<std::string> files;
     std::filesystem::path curr_path(root);
     std::stack<std::filesystem::path> directories;
     if (std::filesystem::exists(curr_path) && std::filesystem::is_directory(curr_path))
         directories.push(curr_path);
-    while (!directories.empty())
-    {
+    while (!directories.empty()) {
         curr_path = directories.top();
         directories.pop();
-        if (std::filesystem::exists(curr_path))
-        {
-            if (std::filesystem::is_directory(curr_path))
-            {
+        if (std::filesystem::exists(curr_path)) {
+            if (std::filesystem::is_directory(curr_path)) {
                 for (const auto &entry : std::filesystem::directory_iterator(curr_path))
                     directories.push(entry.path());
-            }
-            else if (std::filesystem::is_regular_file(curr_path))
+            } else if (std::filesystem::is_regular_file(curr_path))
                 files.push_back(curr_path.generic_u8string());
         }
     }
@@ -82,8 +77,7 @@ std::list<std::string> getFiles(std::string root)
  * @param[in] fmt The format string, followed by any additional arguments
  *                required by the format specifiers.
  */
-void log(const char *fmt, ...)
-{
+void log(const char *fmt, ...) {
     va_list args;
     FILE *fptr;
     char time_string[64];
@@ -112,8 +106,7 @@ void log(const char *fmt, ...)
  *         \c false otherwise.
  */
 bool endsWith(const std::string &fullString,
-              const std::string &ending)
-{
+              const std::string &ending) {
     // Check if the ending string is longer than the full
     // string
     if (ending.size() > fullString.size())
@@ -127,17 +120,12 @@ bool endsWith(const std::string &fullString,
                ending) == 0;
 }
 
-std::string escapeDQ(const std::string &s)
-{
+std::string escapeDQ(const std::string &s) {
     std::string result;
-    for (const char &c : s)
-    {
-        if (c == '"')
-        {
+    for (const char &c : s) {
+        if (c == '"') {
             result += "\"\"";
-        }
-        else
-        {
+        } else {
             result += c;
         }
     }

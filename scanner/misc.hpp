@@ -1,12 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <list>
+#include <string>
+#include <vector>
 
 #define LOG_LOCATION "./log.txt"
 
-std::vector<std::string> splitString(const std::string& s);
+std::vector<std::string> splitString(const std::string &s);
 std::list<std::string> getFiles(std::string root);
 void log(const char *fmt, ...);
 

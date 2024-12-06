@@ -1,12 +1,13 @@
 #include "tag_functions.hpp"
-#include "misc.hpp"
+
+#include <taglib/fileref.h>
+#include <taglib/tag.h>
+#include <taglib/tpropertymap.h>
 
 #include <filesystem>
-#include <taglib/tag.h>
-#include <taglib/fileref.h>
-#include <taglib/tpropertymap.h>
 #include <fstream>
 
+#include "misc.hpp"
 
 /**
  * @brief Gets the metadata of a song from its file location.
@@ -21,11 +22,9 @@
  *
  * @return 0 on success, -1 on failure.
  */
-int getMetadata(std::string file_location, Metadata &metadata)
-{
+int getMetadata(std::string file_location, Metadata &metadata) {
     TagLib::FileRef file_ref(file_location.c_str());
-    if (file_ref.isNull())
-    {
+    if (file_ref.isNull()) {
         log("Could not read metadata from file %s\n", file_location.c_str());
         return -1;
     }
@@ -53,8 +52,7 @@ int getMetadata(std::string file_location, Metadata &metadata)
     return 0;
 }
 
-std::ostream &operator<<(std::ostream &s, const Metadata &m)
-{
+std::ostream &operator<<(std::ostream &s, const Metadata &m) {
     s << "File Location: " << m.file_location << std::endl;
     s << "Title: " << m.title << std::endl;
     s << "Contributing Artists: ";
@@ -88,22 +86,17 @@ std::ostream &operator<<(std::ostream &s, const Metadata &m)
  *
  * @return The name of the image file, or an empty string if no image was found or error occurred.
  */
-std::string getImage(std::string file_location, std::string directory)
-{
+std::string getImage(std::string file_location, std::string directory) {
     TagLib::FileRef file_ref(file_location.c_str());
-    if (file_ref.isNull())
-    {
+    if (file_ref.isNull()) {
         log("Could not read file %s\n", file_location.c_str());
         return "";
     }
     TagLib::StringList complex_property_names = file_ref.complexPropertyKeys();
-    for (auto &property_name : complex_property_names)
-    {
-        if (property_name == "PICTURE")
-        {
+    for (auto &property_name : complex_property_names) {
+        if (property_name == "PICTURE") {
             TagLib::List<TagLib::VariantMap> property = file_ref.complexProperties(property_name);
-            for (TagLib::VariantMap map : property)
-            {
+            for (TagLib::VariantMap map : property) {
                 TagLib::ByteVector picture_byte_vector = map["data"].toByteVector();
                 std::string random_name = std::to_string(std::rand());
                 while (std::filesystem::exists(std::filesystem::path(directory) / std::filesystem::path(random_name)))
@@ -115,7 +108,6 @@ std::string getImage(std::string file_location, std::string directory)
             }
         }
     }
-    
+
     return "";
 }
-
