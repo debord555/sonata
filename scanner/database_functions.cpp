@@ -4,7 +4,6 @@
 #include "database_functions.hpp"
 #include "tag_functions.hpp"
 #include "misc.hpp"
-#include "trie.hpp"
 
 /**
  * @brief Creates a new SQLite database file at the given path, and creates
