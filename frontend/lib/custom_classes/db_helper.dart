@@ -39,9 +39,7 @@ class DbHelper {
     updatorFunction = updator_lib.lookupFunction<Int32 Function(Pointer<Utf8>), int Function(Pointer<Utf8>)>("update");
     var directory = await getApplicationDocumentsDirectory();
     String path = join(directory.path, "Project DBS", "database.db");
-    if (kDebugMode) {
-      print("Database path: $path");
-    }
+
     database = await openDatabase(
       path,
       version: 1,
@@ -99,9 +97,6 @@ class DbHelper {
           String albumArtAbsoluteLocation = join((await getApplicationDocumentsDirectory()).path, "Project DBS", "album_art", answer["album_art_location"]);
           answer["album_art"] = FileImage(File(albumArtAbsoluteLocation));
         } catch (e) {
-          if (kDebugMode) {
-            print("Error: $e");
-          }
           answer["album_art"] = const AssetImage(
             "assets/images/album_placeholder.jpg",
           );
@@ -147,13 +142,7 @@ class DbHelper {
             File(albumArtAbsoluteLocation),
             fit: BoxFit.contain,
           );
-          if (kDebugMode) {
-            print("Here");
-          }
         } catch (e) {
-          if (kDebugMode) {
-            print("Error: $e");
-          }
           answer["album_art"] = Image.asset(
             "assets/images/album_placeholder.jpg",
             fit: BoxFit.contain,
@@ -174,7 +163,7 @@ class DbHelper {
   }
 
   Future<Map<String, dynamic>> getArtist(int id) async {
-    print("p");
+    // print("p");
     var result = await database!.rawQuery(GET_ARTISTS_BY_ID, [id]);
 
     if (result.isEmpty) {
@@ -187,11 +176,7 @@ class DbHelper {
         try {
           String artistArtAbsoluteLocation = join((await getApplicationDocumentsDirectory()).path, "Project DBS", "artist_art", answer["photo_location"]);
           answer["artist_art"] = FileImage(File(artistArtAbsoluteLocation));
-          if (kDebugMode) {
-            print("Here");
-          }
         } catch (e) {
-          print("Error: $e");
           answer["artist_art"] = const AssetImage("assets/images/artist_placeholder.jpg");
         }
       }
@@ -200,11 +185,8 @@ class DbHelper {
   }
 
   Future<List<Map<String, dynamic>>> getAlbumSongData(int albumId) async {
-    print("Trying to find the album with id $albumId");
     List<Map<String, dynamic>> result = await database!.rawQuery(GET_ALBUM_SONG_DATA, [albumId]);
-    if (kDebugMode) {
-      print("Query returned ${result.length} results");
-    }
+
     if (result.isEmpty) {
       return [
         {
@@ -231,13 +213,9 @@ class DbHelper {
         );
       } else {
         try {
-          String albumArtAbsoluteLocation =
-              join((await getApplicationDocumentsDirectory()).path, "Project DBS", "album_art", firstMap["album_art_location"]);
+          String albumArtAbsoluteLocation = join((await getApplicationDocumentsDirectory()).path, "Project DBS", "album_art", firstMap["album_art_location"]);
           firstMap["album_art"] = FileImage(File(albumArtAbsoluteLocation));
         } catch (e) {
-          if (kDebugMode) {
-            print("Error: $e");
-          }
           firstMap["album_art"] = const AssetImage(
             "assets/images/album_placeholder.jpg",
           );
@@ -333,9 +311,7 @@ class DbHelper {
     for (var item in result) {
       answer.add(item["id"] as int);
     }
-    if (kDebugMode) {
-      print(answer);
-    }
+
     return answer;
   }
 
@@ -349,7 +325,6 @@ class DbHelper {
     for (var item in result) {
       answer.add(item["id"] as int);
     }
-    print(answer);
     return answer;
   }
 
@@ -383,7 +358,6 @@ class DbHelper {
 
   Future<Map<String, dynamic>> getArtistFullData(int artistId) async {
     var artistInfo = await database!.query("Artists", where: "id = ?", whereArgs: [artistId], limit: 1);
-    print("First query done");
     var artistSongs = await database!.rawQuery(
       """
         SELECT S.id FROM Songs S, ContributingArtists CA
@@ -391,16 +365,12 @@ class DbHelper {
       """,
       [artistId],
     );
-    print("Second query done");
     var artistAlbums = await database!.rawQuery(
       """
         SELECT id FROM Albums A, AlbumArtists AA WHERE A.id = AA.album_id AND AA.artist_id = ?;
       """,
       [artistId],
     );
-    if (kDebugMode) {
-      print("Third query done");
-    }
 
     Map<String, dynamic> result = (artistInfo.isNotEmpty)
         ? Map<String, dynamic>.from(artistInfo[0])
@@ -415,13 +385,9 @@ class DbHelper {
       String artistArtAbsoluteLocation = join((await getApplicationDocumentsDirectory()).path, "Project DBS", "artist_art", result["photo_location"]);
       result["artist_art"] = FileImage(File(result["photo_location"]));
     } catch (e) {
-      print("Error fetching artist art: $e");
       result["artist_art"] = const AssetImage("assets/images/artist_placeholder.jpg");
     }
-    print("Found ${artistSongs.length} songs");
-    if (kDebugMode) {
-      print("Found ${artistAlbums.length} albums");
-    }
+
     result["artist_song_ids"] = [];
     for (var item in artistSongs) {
       result["artist_song_ids"].add(item["id"] as int);
@@ -430,7 +396,6 @@ class DbHelper {
     for (var item in artistAlbums) {
       result["artist_album_ids"].add(item["id"] as int);
     }
-    print(result);
     return result;
   }
 

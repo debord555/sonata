@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 class SongTile extends StatefulWidget {
   final int song_id;
 
-  SongTile(this.song_id, {super.key});
+  const SongTile(this.song_id, {super.key});
 
   @override
   State<SongTile> createState() => _SongTileState();

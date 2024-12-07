@@ -32,7 +32,7 @@ class _AlbumViewScreenState extends State<AlbumViewScreen> {
       future: future_album_song_data,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          print("x");
+          // print("x");
           return Scaffold(
             appBar: StackedScreenAppbar(snapshot.data![0]["album"]),
             body: ListView(

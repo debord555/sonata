@@ -62,7 +62,7 @@ class _ArtistViewScreenState extends State<ArtistViewScreen> {
               ],
             ),
           );
-          print("Added base scaffold!");
+          // print("Added base scaffold!");
           if (snapshot.data!["artist_album_ids"].isNotEmpty) {
             toDraw.add(
               const Padding(
@@ -107,7 +107,7 @@ class _ArtistViewScreenState extends State<ArtistViewScreen> {
             }
           }
           toDraw.add(const SizedBox.square(dimension: 32,));
-          print("Added album stuff");
+          // print("Added album stuff");
           return Scaffold(
             appBar: StackedScreenAppbar(snapshot.data!["name"]),
             body: SafeArea(

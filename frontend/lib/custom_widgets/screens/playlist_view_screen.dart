@@ -42,7 +42,7 @@ class _PlaylistViewScreenState extends State<PlaylistViewScreen> {
       future: future_playlist_entries,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          print("x");
+          // print("x");
           return Scaffold(
             appBar: StackedScreenAppbar(widget.playlist_name),
             body: ListView(
@@ -107,7 +107,9 @@ class _PlaylistViewScreenState extends State<PlaylistViewScreen> {
                                         toAdd.add(item["song_id"] as int);
                                       }
                                       Provider.of<Data>(context, listen: false).addSongsToQueue(toAdd);
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Added ${toAdd.length} songs to queue."),));
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                        content: Text("Added ${toAdd.length} songs to queue."),
+                                      ));
                                     }
                                     break;
                                   case 1:
@@ -116,7 +118,9 @@ class _PlaylistViewScreenState extends State<PlaylistViewScreen> {
                                       for (var item in snapshot.data!) {
                                         toAdd.add(item["song_id"] as int);
                                       }
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Added ${toAdd.length} songs to queue."),));
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                        content: Text("Added ${toAdd.length} songs to queue."),
+                                      ));
                                       Provider.of<Data>(context, listen: false).addSongsToQueueShuffled(toAdd);
                                     }
                                     break;

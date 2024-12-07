@@ -13,7 +13,7 @@ class PlayPauseButton extends StatelessWidget {
         final playerState = snapshot.data;
         final playing = playerState?.playing;
         final processingState = playerState?.processingState;
-        print("Processing state: $processingState");
+        // print("Processing state: $processingState");
         if (!(playing ?? false)) {
           return IconButton(
             icon: const Icon(Icons.play_arrow_rounded),

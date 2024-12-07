@@ -83,12 +83,12 @@ class Console extends StatelessWidget {
                           : null,
                     ),
                     IconButton(
-                      icon: Icon(Icons.stop_rounded),
+                      icon: const Icon(Icons.stop_rounded),
                       onPressed: (Provider.of<Data>(context).player.playerState.playing ?? false)
-                          ?
-                          () {
+                          ? () {
                               Provider.of<Data>(context, listen: false).stopPlaying();
-                            } : null,
+                            }
+                          : null,
                     ),
                   ],
                 ),

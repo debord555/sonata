@@ -6,7 +6,6 @@ import 'package:ffi/src/utf8.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:sonata/custom_classes/db_helper.dart';
 import 'package:sonata/misc/constants.dart';
 import 'package:just_audio/just_audio.dart';
@@ -33,11 +32,11 @@ class Data extends ChangeNotifier {
   int themeMode = 0;
 
   Data() {
-    print("Constructed Data");
+    // print("Constructed Data");
     player = AudioPlayer();
     player.positionStream.listen((position) {
       if (position == player.duration) {
-        print("Playing completed!");
+        // print("Playing completed!");
         tryToPlayNextSong();
       }
     });
@@ -54,9 +53,9 @@ class Data extends ChangeNotifier {
     await readSettings();
     getAllInfo().then(
       (input) {
-        print("No. of songs: ${song_ids.length}");
-        print("No. of albums: ${album_ids.length}");
-        print("No. of artists: ${artist_ids.length}");
+        // print("No. of songs: ${song_ids.length}");
+        // print("No. of albums: ${album_ids.length}");
+        // print("No. of artists: ${artist_ids.length}");
       },
     );
   }
@@ -76,7 +75,7 @@ class Data extends ChangeNotifier {
         throw "Unknown theme integer: $themeMode";
       }
     } catch (e) {
-      print("Error while reading settings: $e");
+      // print("Error while reading settings: $e");
       search_paths = [];
       repeat = 0;
       shuffle = false;
@@ -96,9 +95,9 @@ class Data extends ChangeNotifier {
         "themeMode": themeMode,
       };
       file.writeAsStringSync(jsonEncode(settingsMap));
-      print("Settings saved.");
+      // print("Settings saved.");
     } catch (e) {
-      print("Error while saving settings: $e");
+      // print("Error while saving settings: $e");
     }
   }
 
@@ -171,7 +170,7 @@ class Data extends ChangeNotifier {
   void setAndPlaySong(int id) async {
     try {
       Map<String, dynamic> info = await DbHelper.instance.getSong(id);
-      print("${info["location"]}");
+      // print("${info["location"]}");
       if (player.playing) {
         await player.stop();
       }
@@ -180,7 +179,7 @@ class Data extends ChangeNotifier {
       setCurrentPlayingSongId(id);
       DbHelper.instance.increasePlayCount(id);
     } catch (e) {
-      print("Error while playing: $e");
+      // print("Error while playing: $e");
     }
   }
 
@@ -267,7 +266,7 @@ class Data extends ChangeNotifier {
   }
 
   void playQueueEntryNow(int index) {
-    print("Queue Now: $now_playing_queue");
+    // print("Queue Now: $now_playing_queue");
     if (current_playing_id != -1) {
       addSongToRewindStack(current_playing_id);
     }
@@ -282,66 +281,66 @@ class Data extends ChangeNotifier {
   }
 
   void tryToPlayNextSong() {
-    print("Trying to play next song.");
+    // print("Trying to play next song.");
     if (now_playing_queue.isEmpty) {
-      print("Queue is empty, so exiting");
+      // print("Queue is empty, so exiting");
       return;
     }
     if (repeat == 1) {
-      print("Repeat is one-track");
+      // print("Repeat is one-track");
       if (current_playing_id != -1) {
-        print("Playing current track again");
+        // print("Playing current track again");
         setAndPlaySong(current_playing_id);
       } else {
-        print("No track is playing, so exiting");
+        // print("No track is playing, so exiting");
       }
       return;
     } else {
-      print("Repeat is not one-track");
+      // print("Repeat is not one-track");
       if (index_to_play_next != -1) {
-        print("Playing next-marked track");
+        // print("Playing next-marked track");
         current_playing_index = index_to_play_next;
         current_playing_id = now_playing_queue[index_to_play_next];
         already_played[current_playing_index] = true;
         index_to_play_next = -1;
         setAndPlaySong(current_playing_id);
       } else {
-        print("No track has been marked next");
+        // print("No track has been marked next");
         if (haveAllBeenPlayed()) {
-          print("All queued tracks were already played");
+          // print("All queued tracks were already played");
           if (repeat == 0) {
-            print("Repeat is off, so exiting");
+            // print("Repeat is off, so exiting");
             return;
           } else {
-            print("Repeat is all-track, so clearing played-status, and playing random track.");
+            // print("Repeat is all-track, so clearing played-status, and playing random track.");
             clearPlayedStatus();
             if (shuffle) {
-              print("Shuffle is on, selecting random track from queue");
+              // print("Shuffle is on, selecting random track from queue");
               current_playing_index = Random().nextInt(now_playing_queue.length);
               playQueueEntryNow(current_playing_index);
             } else {
-              print("Shuffle is off, selecting first track from queue");
+              // print("Shuffle is off, selecting first track from queue");
               playQueueEntryNow(0);
             }
           }
         } else {
-          print("Some queued tracks still left to play");
+          // print("Some queued tracks still left to play");
           if (shuffle) {
-            print("Shuffle is on, selecting random non-played track from queue");
+            // print("Shuffle is on, selecting random non-played track from queue");
             index_to_play_next = Random().nextInt(now_playing_queue.length);
             while (already_played[index_to_play_next]) {
               index_to_play_next = Random().nextInt(now_playing_queue.length);
             }
             playQueueEntryNow(index_to_play_next);
           } else {
-            print("Shuffle is off, selecting first non-played track from queue");
+            // print("Shuffle is off, selecting first non-played track from queue");
             if (current_playing_index == -1) {
               current_playing_index++;
             }
             for (int i = current_playing_index; i < already_played.length; i++) {
               if (!already_played[i]) {
                 index_to_play_next = i;
-                print("Playing song id $i");
+                // print("Playing song id $i");
                 playQueueEntryNow(index_to_play_next);
                 break;
               }
@@ -411,7 +410,7 @@ class Data extends ChangeNotifier {
   }
 
   Future<int> update(BuildContext context) async {
-    print("About to update!!");
+    // print("About to update!!");
     final String databaseLocation = join((await getApplicationDocumentsDirectory()).path, "Project DBS", "database.db");
     final String albumArtDirectory = join((await getApplicationDocumentsDirectory()).path, "Project DBS", "album_art");
     final Map<String, dynamic> prejson = {
@@ -422,7 +421,7 @@ class Data extends ChangeNotifier {
     String json = jsonEncode(prejson);
     Pointer<Utf8> inputPtr = json.toNativeUtf8();
     DbHelper.instance.updatorFunction(inputPtr);
-    print("Done updating!");
+    // print("Done updating!");
     getAllInfo();
     notifyListeners();
     return 0;
