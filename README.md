@@ -1,6 +1,8 @@
 # Sonata Music Player
 Sonata is a sleek and intuitive music player built with Flutter, designed to enhance your music listening experience with powerful features and a user-friendly interface.
 
+![sonata_sc](https://github.com/user-attachments/assets/94a9657c-c761-4064-b6e0-a47cd354be2c)
+
 ## Key Features
 - **Album View**: Browse and organize your music by albums.
 - **Artist View**: Easily explore your library by artist.
